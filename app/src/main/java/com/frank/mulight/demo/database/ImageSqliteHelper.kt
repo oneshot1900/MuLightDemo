@@ -41,10 +41,11 @@ class ImageSqliteHelper constructor(context: Context) : SQLiteOpenHelper(context
         if (TextUtils.isEmpty(image.name) || TextUtils.isEmpty(image.path)) {
             return -1
         }
-        val contentValues = ContentValues()
-        contentValues.put(NAME, image.name)
-        contentValues.put(TIMESTAMP, image.timeStamp)
-        contentValues.put(PATH, image.path)
+        val contentValues = ContentValues().apply {
+            put(NAME, image.name)
+            put(TIMESTAMP, image.timeStamp)
+            put(PATH, image.path)
+        }
         val db = writableDatabase
         val resultId = db.insert(TABLE_NAME, null, contentValues)
         db.close()
