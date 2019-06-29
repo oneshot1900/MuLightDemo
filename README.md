@@ -16,7 +16,7 @@ Solution: use recylerview to show list. use Glide to show each image which provi
 
 After solution made, it came out three activity for me. one is MainActivity which provider taking picture button and viewing list button. the other is ImageListActivity which show list. the last is ImageViewActivity which show the full image.
 
-For the time limited and the project is juset a small demo. There are some points to impoved.
+For the time limited and the project is just a small demo. There are some points to impoved.
 Some are small details:
 1.When user input a name, i should ensure this name is not used, or new file will replace the old file of the same name.
 
@@ -29,4 +29,4 @@ Some are large structure:
 
 2.Add more function in sqlite db to cover other requirement, like query one image, use modified sort, delete image.
 
-3.Make db cover more media type, put taking photo into a class which implement abstract class, which describe a action to handle several kind of medias include image, make the grid'adapter more abstract to meet other media.
+3.Make db cover more media type, put taking photo into a class which implement abstract class, which describe a action to handle several kind of media include image, make the grid'adapter more abstract to meet other media.
