@@ -1,13 +1,18 @@
 package com.frank.mulight.demo.widget
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.Context
-import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.DisplayMetrics
+import android.view.Gravity
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
 import com.frank.mulight.demo.R
+import java.io.File
 
 
 class EditDialog(context: Context) : Dialog(context, R.style.Dialog) {
@@ -18,6 +23,19 @@ class EditDialog(context: Context) : Dialog(context, R.style.Dialog) {
 
     init {
         setContentView(R.layout.dialog_edit)
+        val attribute = WindowManager.LayoutParams().apply {
+            val outMetrics = DisplayMetrics()
+            (context as Activity).windowManager.defaultDisplay.getMetrics(outMetrics)
+            val widthPixels = outMetrics.widthPixels
+            val heightPixels = outMetrics.heightPixels
+
+            width = (0.7 * widthPixels).toInt()
+            height = (0.7 * heightPixels).toInt()
+
+            window.setGravity(Gravity.CENTER)
+        }
+        window.attributes = attribute
+
         et = findViewById(R.id.et)
         btnLeft = findViewById(R.id.btnLeft)
         btnRight = findViewById(R.id.btnRight)
@@ -32,7 +50,6 @@ class EditDialog(context: Context) : Dialog(context, R.style.Dialog) {
 
     override fun show() {
         et.setText("")
-        imageView.setImageResource(0)
         super.show()
     }
 
@@ -53,8 +70,8 @@ class EditDialog(context: Context) : Dialog(context, R.style.Dialog) {
         }
     }
 
-    fun setImage(bitmap: Bitmap):EditDialog{
-        imageView.setImageBitmap(bitmap)
+    fun setImageFile(file: File): EditDialog {
+        imageView.setImageBitmap(BitmapFactory.decodeFile(file.absolutePath))
         return this
     }
 }

@@ -17,4 +17,9 @@
         <item name="android:backgroundDimAmount">0.5</item>
         <item name="android:backgroundDimEnabled">true</item>
     </style>
+    <style name="ImageTextView">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">10sp</item>
+        <item name="android:background">@color/tipBgColor</item>
+    </style>
 </resources>

@@ -1,33 +1,37 @@
 package com.frank.mulight.demo
 
+import android.Manifest.permission.*
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import android.Manifest.permission.CAMERA
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Environment.DIRECTORY_PICTURES
 import android.provider.MediaStore
 import android.text.TextUtils
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import com.frank.mulight.demo.database.ImageSqliteHelper
 import com.frank.mulight.demo.entity.Image
 import com.frank.mulight.demo.widget.EditDialog
 import java.io.File
 
-
+/**
+ * this activity provider two buttons.
+ * one is for taking photo,the other is for previewing photos
+ */
 class MainActivity : AppCompatActivity(), View.OnClickListener {
-    private val PERMISSIONS = Array(2) { WRITE_EXTERNAL_STORAGE;CAMERA }
+    private val PERMISSIONS = arrayOf(WRITE_EXTERNAL_STORAGE,CAMERA)
     private val REQUEST_PERMISSION_CODE = 0
     private val REQUEST_CAPTURE_CODE = 1
     private val TMP_IMAGE_NAME = "tmp"
     private lateinit var IMAGE_PATH: String
-    private lateinit var file: File
+    //after taking photo,this file will save image temporarily
+    private lateinit var tmpFile: File
+    //sqlite for save image entity
     private lateinit var sqliteHelper: ImageSqliteHelper
+    //dialog for input image name
     private lateinit var editDialog: EditDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,12 +47,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun init() {
-        IMAGE_PATH = getExternalFilesDir(DIRECTORY_PICTURES).absolutePath.apply {
-            if (!endsWith(File.separator)) {
-                IMAGE_PATH += File.separator
-            }
+        IMAGE_PATH = getExternalFilesDir(DIRECTORY_PICTURES).absolutePath
+        if (!IMAGE_PATH.endsWith(File.separator)) {
+            IMAGE_PATH += File.separator
         }
-        file = File(IMAGE_PATH + TMP_IMAGE_NAME)
+
+        tmpFile = File(IMAGE_PATH + TMP_IMAGE_NAME)
         sqliteHelper = ImageSqliteHelper(this)
 
         editDialog = EditDialog(this).apply {
@@ -58,11 +62,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     Toast.makeText(this@MainActivity, "name is blank!", Toast.LENGTH_LONG).show()
                 } else {
                     dismiss()
+                    //if choose confirm,temp file will be renamed
                     saveImage(name!!)
                 }
             })
             setLeftClickListener(View.OnClickListener {
                 dismiss()
+                //if choose cancel,temp file will be deleted
                 deleteTmpImage()
             })
         }
@@ -83,8 +89,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_CAPTURE_CODE) {
-            if (file.exists()) {
-                editDialog.setImage(BitmapFactory.decodeFile(file.absolutePath)).show()
+            if (tmpFile.exists() && tmpFile.length() > 0) {
+                editDialog.setImageFile(tmpFile).show()
             } else {
                 Toast.makeText(this, "take photo failure", Toast.LENGTH_LONG).show()
             }
@@ -113,17 +119,31 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         val intent = Intent().apply {
             action = MediaStore.ACTION_IMAGE_CAPTURE
             addCategory(Intent.CATEGORY_DEFAULT)
-            if (file.exists()) {
-                file.delete()
+
+            //tell system where the result will be saved
+            if (tmpFile.exists()) {
+                tmpFile.delete()
             }
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file))
+            tmpFile.createNewFile()
+
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            putExtra(
+                MediaStore.EXTRA_OUTPUT, FileProvider.getUriForFile(
+                    this@MainActivity,
+                    BuildConfig.APPLICATION_ID + ".fileProvider",
+                    tmpFile
+                )
+            )
         }
         startActivityForResult(intent, REQUEST_CAPTURE_CODE)
     }
 
+    /**
+     *  rename tmp file and save it,then insert image entity to db
+     */
     private fun saveImage(name: String) {
-        if (file.exists()) {
-            file.renameTo(File(IMAGE_PATH + name))
+        if (tmpFile.exists()) {
+            tmpFile.renameTo(File(IMAGE_PATH + name))
 
             val image = Image().apply {
                 this.name = name
@@ -137,14 +157,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun deleteTmpImage() {
-        if (file.exists()) {
-            file.delete()
+        if (tmpFile.exists()) {
+            tmpFile.delete()
         }
     }
 
     private fun requestPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(PERMISSIONS, REQUEST_CAPTURE_CODE)
+            requestPermissions(PERMISSIONS, REQUEST_PERMISSION_CODE)
         }
     }
 

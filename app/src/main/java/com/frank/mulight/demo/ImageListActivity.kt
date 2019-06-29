@@ -14,6 +14,7 @@ import java.io.File
 
 /**
  * Created by heyunfei on 2019/6/28.
+ * this activity will get image list from db ,and use a grid to show it.
  */
 class ImageListActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var recyclerView: RecyclerView
@@ -24,6 +25,9 @@ class ImageListActivity : AppCompatActivity(), View.OnClickListener {
         loadImageList()
     }
 
+    /**
+     * load the list from db,then show the list as a grid
+     */
     private fun loadImageList() {
         ImageSqliteHelper(this).queryList().let {
             val adapter = object : BaseQuickAdapter<Image, BaseViewHolder>(R.layout.item_image, it) {
@@ -34,8 +38,8 @@ class ImageListActivity : AppCompatActivity(), View.OnClickListener {
                     Glide.with(this@ImageListActivity).load(File(item.path)).into(helper.getView(R.id.imageView))
                 }
             }.apply {
-                onItemChildClickListener =
-                    BaseQuickAdapter.OnItemChildClickListener { _, _, position ->
+                onItemClickListener =
+                    BaseQuickAdapter.OnItemClickListener { adapter, view, position ->
                         if (it != null) {
                             ImageViewActivity.startActivity(this@ImageListActivity, it[position].path)
                         }
@@ -50,7 +54,7 @@ class ImageListActivity : AppCompatActivity(), View.OnClickListener {
         recyclerView = findViewById<RecyclerView>(R.id.recyclerView).apply {
             layoutManager = GridLayoutManager(
                 this@ImageListActivity,
-                4
+                2
             )
         }
     }
